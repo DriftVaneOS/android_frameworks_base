@@ -18,7 +18,9 @@ package com.android.systemui.volume.dialog.sliders.ui.compose
 
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.width
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -65,6 +67,7 @@ fun SliderTrack(
     inactiveTrackEndIcon: (@Composable BoxScope.(iconsState: SliderIconsState) -> Unit)? = null,
 ) {
     val isRtl = LocalLayoutDirection.current == LayoutDirection.Rtl
+    val volumeStyle = rememberVolumeStyle()
     val measurePolicy =
         remember(sliderState, isRtl, isVertical, thumbTrackGapSize) {
             TrackMeasurePolicy(
@@ -77,25 +80,47 @@ fun SliderTrack(
     Layout(
         measurePolicy = measurePolicy,
         content = {
-            SliderDefaults.Track(
-                sliderState = sliderState,
-                colors = colors,
-                enabled = isEnabled,
-                trackCornerSize = trackCornerSize,
-                trackInsideCornerSize = trackInsideCornerSize,
-                drawStopIndicator = null,
-                thumbTrackGapSize = thumbTrackGapSize,
-                drawTick = { _, _ -> },
-                modifier =
-                    Modifier.then(
-                            if (isVertical) {
-                                Modifier.width(trackSize)
-                            } else {
-                                Modifier.height(trackSize)
-                            }
-                        )
-                        .layoutId(Contents.Track),
-            )
+            // DriftVaneOS: custom volume styles (designs from RisingOS)
+            if (volumeStyle == VOLUME_STYLE_STOCK) {
+                SliderDefaults.Track(
+                    sliderState = sliderState,
+                    colors = colors,
+                    enabled = isEnabled,
+                    trackCornerSize = trackCornerSize,
+                    trackInsideCornerSize = trackInsideCornerSize,
+                    drawStopIndicator = null,
+                    thumbTrackGapSize = thumbTrackGapSize,
+                    drawTick = { _, _ -> },
+                    modifier =
+                        Modifier.then(
+                                if (isVertical) {
+                                    Modifier.width(trackSize)
+                                } else {
+                                    Modifier.height(trackSize)
+                                }
+                            )
+                            .layoutId(Contents.Track),
+                )
+            } else {
+                StyledVolumeTrack(
+                    style = volumeStyle,
+                    fraction = sliderState.coercedValueAsFraction,
+                    colors = colors,
+                    isEnabled = isEnabled,
+                    isVertical = isVertical,
+                    isRtl = isRtl,
+                    cornerSize = trackCornerSize,
+                    modifier =
+                        Modifier.then(
+                                if (isVertical) {
+                                    Modifier.width(trackSize).fillMaxHeight()
+                                } else {
+                                    Modifier.height(trackSize).fillMaxWidth()
+                                }
+                            )
+                            .layoutId(Contents.Track),
+                )
+            }
 
             TrackIcon(
                 icon = activeTrackStartIcon,
