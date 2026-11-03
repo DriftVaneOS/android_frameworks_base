@@ -321,12 +321,21 @@ private constructor(
         darkIconDispatcher.addDarkReceiver(clock)
         darkIconDispatcher.addDarkReceiver(clockCenter)
         darkIconDispatcher.addDarkReceiver(clockRight)
+        // DriftVaneOS: status bar logo
+        mView.findViewById<com.android.systemui.statusbar.driftvane.DriftVaneLogoView>(
+                R.id.driftvane_logo
+            )
+            ?.let { darkIconDispatcher.addDarkReceiver(it) }
     }
 
     private fun removeDarkReceivers() {
         darkIconDispatcher.removeDarkReceiver(clock)
         darkIconDispatcher.removeDarkReceiver(clockCenter)
         darkIconDispatcher.removeDarkReceiver(clockRight)
+        mView.findViewById<com.android.systemui.statusbar.driftvane.DriftVaneLogoView>(
+                R.id.driftvane_logo
+            )
+            ?.let { darkIconDispatcher.removeDarkReceiver(it) }
     }
 
     @Deprecated(
