@@ -25,6 +25,16 @@ class AxDynamicBarSettings @Inject constructor(
         const val KEY_KEYGUARD_ENABLED = "ax_dynamic_bar_keyguard_enabled"
         const val KEY_KEYGUARD_BATTERY_CHIP_MODE = "ax_dynamic_bar_keyguard_battery_chip_mode"
         const val KEY_COMPACT_NOTIFICATIONS = "ax_dynamic_bar_compact_notifications"
+
+        // DriftVaneOS: one on/off Secure setting per event type, e.g. ax_dynamic_bar_event_media
+        const val KEY_EVENT_PREFIX = "ax_dynamic_bar_event_"
+
+        // DriftVaneOS defaults: only media and ongoing activities (calls, timers,
+        // recordings, navigation and other ongoing chips) are on out of the box.
+        val DEFAULT_DISABLED_EVENTS = setOf(
+            "sports", "bluetooth", "hotspot", "charging", "alarm", "ringer", "vpn",
+            "clipboard", "notification", "app_switch", "torch", "biometric_unlock",
+        )
     }
 
     private val _isEnabled = MutableStateFlow(false)
@@ -89,6 +99,14 @@ class AxDynamicBarSettings @Inject constructor(
             settingsObserver,
             UserHandle.USER_ALL,
         )
+        for (typeId in EVENT_TYPE_IDS.values) {
+            secureSettings.registerContentObserverForUserSync(
+                KEY_EVENT_PREFIX + typeId,
+                false,
+                settingsObserver,
+                UserHandle.USER_ALL,
+            )
+        }
     }
 
     fun destroy() {
@@ -108,7 +126,7 @@ class AxDynamicBarSettings @Inject constructor(
             secureSettings.getIntForUser(KEY_COMPACT_NOTIFICATIONS, 1, UserHandle.USER_CURRENT) == 1
 
         val json = secureSettings.getStringForUser(KEY_EVENTS, UserHandle.USER_CURRENT) ?: ""
-        _disabledEventTypes.value =
+        val jsonDisabled: Set<String> =
             try {
                 if (json.isBlank()) emptySet()
                 else {
@@ -118,6 +136,11 @@ class AxDynamicBarSettings @Inject constructor(
             } catch (_: Exception) {
                 emptySet()
             }
+        val switchDisabled = EVENT_TYPE_IDS.values.filterTo(HashSet()) { typeId ->
+            val default = if (typeId in DEFAULT_DISABLED_EVENTS) 0 else 1
+            secureSettings.getIntForUser(KEY_EVENT_PREFIX + typeId, default, UserHandle.USER_CURRENT) == 0
+        }
+        _disabledEventTypes.value = jsonDisabled + switchDisabled
     }
 
     fun isEventEnabled(event: IslandEvent): Boolean {
