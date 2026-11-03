@@ -17,7 +17,6 @@
 package com.android.systemui.shade.shared.flag
 
 import com.android.systemui.Flags
-import com.android.systemui.Flags.dualShade
 import com.android.systemui.Flags.statusBarPopupChips
 import com.android.systemui.flags.FlagToken
 import com.android.systemui.flags.RefactorFlagUtils
@@ -40,7 +39,9 @@ object DualShadeFlag {
     /** Whether the feature is enabled. */
     @JvmStatic
     inline val isEnabled
-        get() = (dualShade() || isDesktopDevice) && SceneContainerFlag.isEnabled
+        // DriftVaneOS: always allow Dual Shade so the user can pick separate or combined
+        // Quick Settings in DriftVane Enhancements (Settings.Secure.DUAL_SHADE).
+        get() = SceneContainerFlag.isEnabled
 
     /**
      * Called to ensure code is only run when the flag is enabled. This protects users from the
