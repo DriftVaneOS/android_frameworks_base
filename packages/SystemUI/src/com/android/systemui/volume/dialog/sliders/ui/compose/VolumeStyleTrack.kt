@@ -3,12 +3,13 @@
  * SPDX-License-Identifier: Apache-2.0
  *
  * Volume slider styles for the Android 17 volume dialog.
- * Style designs (gradient, double layer, neumorph, outline, shaded layer)
- * based on RisingOS "Volume Styles" by minaripenguin.
+ * Ported from RisingOS "Volume Styles" by minaripenguin (Apache-2.0):
+ * same layers, insets and Monet colors, redrawn for the Compose slider.
  */
 
 package com.android.systemui.volume.dialog.sliders.ui.compose
 
+import android.content.res.Configuration
 import android.database.ContentObserver
 import android.os.Handler
 import android.os.Looper
@@ -29,9 +30,7 @@ import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
-import androidx.compose.ui.graphics.drawscope.DrawScope
-import androidx.compose.ui.graphics.drawscope.Stroke
-import androidx.compose.ui.graphics.drawscope.clipRect
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.Dp
 
@@ -82,7 +81,7 @@ fun rememberVolumeStyle(): Int {
 }
 
 /**
- * Draws the whole track (inactive + active part) in one of the custom styles.
+ * Draws the whole track (inactive + active part) in one of the RisingOS styles.
  * [fraction] is the filled amount, 0..1. Vertical tracks fill from the bottom.
  */
 @Composable
@@ -96,111 +95,99 @@ fun StyledVolumeTrack(
     cornerSize: Dp,
     modifier: Modifier = Modifier,
 ) {
-    val active = if (isEnabled) colors.activeTrackColor else colors.disabledActiveTrackColor
-    val inactive = if (isEnabled) colors.inactiveTrackColor else colors.disabledInactiveTrackColor
+    val context = LocalContext.current
+    val night =
+        (LocalConfiguration.current.uiMode and Configuration.UI_MODE_NIGHT_MASK) ==
+            Configuration.UI_MODE_NIGHT_YES
+    fun sys(id: Int) = Color(context.getColor(id))
+    // RisingOS volumestyles_colors.xml (values / values-night)
+    val blue = sys(if (night) android.R.color.system_accent1_500 else android.R.color.system_accent1_400)
+    val green = sys(if (night) android.R.color.system_accent3_200 else android.R.color.system_accent3_600)
+    val track =
+        sys(if (night) android.R.color.system_neutral2_900 else android.R.color.system_accent1_600)
+            .copy(alpha = 0.8f)
+    val hollow = sys(if (night) android.R.color.system_neutral1_900 else android.R.color.system_neutral1_10)
     val f = fraction.coerceIn(0f, 1f)
+    val dim = if (isEnabled) 1f else 0.4f
 
     Canvas(modifier) {
-        val r = CornerRadius(cornerSize.toPx(), cornerSize.toPx())
         val w = size.width
         val h = size.height
-
-        // Rect of the filled part.
-        val (fillTopLeft, fillSize) =
+        val r = cornerSize.toPx()
+        val (fillTL, fillSz) =
             when {
                 isVertical -> Offset(0f, h * (1 - f)) to Size(w, h * f)
                 isRtl -> Offset(w * (1 - f), 0f) to Size(w * f, h)
                 else -> Offset.Zero to Size(w * f, h)
             }
-
-        fun DrawScope.filled(brush: Brush, inset: Float = 0f) {
-            if (f <= 0f) return
-            drawRoundRect(
-                brush = brush,
-                topLeft = fillTopLeft + Offset(inset, inset),
-                size = Size(
-                    (fillSize.width - inset * 2).coerceAtLeast(0f),
-                    (fillSize.height - inset * 2).coerceAtLeast(0f),
-                ),
-                cornerRadius = r,
+        // Gradient along the fill (start of the slider -> current level).
+        val along =
+            Brush.linearGradient(
+                listOf(blue, green),
+                start = if (isVertical) Offset(0f, h) else Offset(if (isRtl) w else 0f, 0f),
+                end = if (isVertical) Offset(0f, fillTL.y) else Offset(if (isRtl) fillTL.x else fillSz.width, 0f),
             )
+        // Gradient across the track (the RisingOS 90/270 degree layers).
+        fun across(a: Color, b: Color) =
+            if (isVertical) Brush.horizontalGradient(listOf(a, b)) else Brush.verticalGradient(listOf(a, b))
+
+        fun layer(brush: Brush, insetDp: Float = 0f) {
+            if (f <= 0f) return
+            val ins = insetDp * density
+            val sz = Size((fillSz.width - ins * 2).coerceAtLeast(0f), (fillSz.height - ins * 2).coerceAtLeast(0f))
+            if (sz.width <= 0f || sz.height <= 0f) return
+            val rr = (r - ins).coerceAtLeast(2f * density)
+            drawRoundRect(brush, fillTL + Offset(ins, ins), sz, CornerRadius(rr, rr), alpha = dim)
+        }
+        fun knob() {
+            if (f <= 0f) return
+            val d = (if (isVertical) w else h)
+            val c =
+                when {
+                    isVertical -> Offset(w / 2, fillTL.y + d / 2)
+                    isRtl -> Offset(fillTL.x + d / 2, h / 2)
+                    else -> Offset(fillSz.width - d / 2, h / 2)
+                }
+            drawCircle(Brush.linearGradient(listOf(blue, green)), radius = d / 2 - 6f * density, center = c, alpha = dim)
         }
 
-        val stroke = 2f * density
+        // Inactive track: volume_bg_color tinted volume_shape_color, alpha 0.8
+        drawRoundRect(track, cornerRadius = CornerRadius(r, r))
+
         when (style) {
+            VOLUME_STYLE_GRADIENT -> layer(along)
             VOLUME_STYLE_DOUBLE_LAYER -> {
-                drawRoundRect(inactive, cornerRadius = r)
-                // Translucent outer layer, solid inner layer.
-                filled(SolidColor(active.copy(alpha = 0.45f)))
-                filled(SolidColor(active), inset = 4f * density)
+                layer(along)
+                layer(SolidColor(Color(0x40000000)))
+                layer(along, 4f)
             }
-            VOLUME_STYLE_GRADIENT -> {
-                drawRoundRect(inactive, cornerRadius = r)
-                val start = if (isVertical) Offset(0f, h) else Offset(if (isRtl) w else 0f, 0f)
-                val end = if (isVertical) Offset(0f, 0f) else Offset(if (isRtl) 0f else w, 0f)
-                filled(
-                    Brush.linearGradient(
-                        listOf(active.copy(alpha = 0.35f), active),
-                        start = start,
-                        end = end,
-                    )
-                )
+            VOLUME_STYLE_NEUMORPH -> {
+                layer(across(green, blue))
+                layer(across(blue, green), 4f)
             }
-            VOLUME_STYLE_NEUMORPH, VOLUME_STYLE_NEUMORPH_OUTLINE -> {
-                // Soft shadow below-right, soft light above-left.
-                val o = 3f * density
-                drawRoundRect(Color.Black.copy(alpha = 0.25f), topLeft = Offset(o, o), cornerRadius = r)
-                drawRoundRect(Color.White.copy(alpha = 0.10f), topLeft = Offset(-o, -o), cornerRadius = r)
-                drawRoundRect(inactive, cornerRadius = r)
-                if (style == VOLUME_STYLE_NEUMORPH_OUTLINE) {
-                    drawRoundRect(active, cornerRadius = r, style = Stroke(stroke))
-                    filled(SolidColor(active), inset = 5f * density)
-                } else {
-                    filled(SolidColor(active))
-                }
+            VOLUME_STYLE_NEUMORPH_OUTLINE -> {
+                layer(along)
+                layer(across(blue, green), 2f)
+                layer(across(green, blue), 4f)
+                knob()
             }
             VOLUME_STYLE_OUTLINE -> {
-                drawRoundRect(
-                    active.copy(alpha = 0.8f),
-                    topLeft = Offset(stroke / 2, stroke / 2),
-                    size = Size(w - stroke, h - stroke),
-                    cornerRadius = r,
-                    style = Stroke(stroke),
-                )
-                filled(SolidColor(active), inset = 5f * density)
+                layer(along)
+                layer(SolidColor(hollow), 4f)
+                knob()
             }
             VOLUME_STYLE_SHADED_LAYER -> {
-                drawRoundRect(inactive, cornerRadius = r)
-                filled(SolidColor(active))
-                // Lighter band at the leading edge of the fill.
-                if (f > 0f) {
-                    val band = 24f * density
-                    clipRect(
-                        left = fillTopLeft.x,
-                        top = fillTopLeft.y,
-                        right = fillTopLeft.x + fillSize.width,
-                        bottom = fillTopLeft.y + fillSize.height,
-                    ) {
-                        val bandTopLeft =
-                            when {
-                                isVertical -> fillTopLeft
-                                isRtl -> fillTopLeft
-                                else -> Offset(fillTopLeft.x + fillSize.width - band, 0f)
-                            }
-                        val bandSize = if (isVertical) Size(w, band) else Size(band, h)
-                        drawRoundRect(
-                            Color.White.copy(alpha = 0.22f),
-                            topLeft = bandTopLeft,
-                            size = bandSize,
-                            cornerRadius = r,
-                        )
-                    }
-                }
+                layer(along)
+                layer(
+                    if (isVertical) Brush.verticalGradient(listOf(Color.Transparent, Color.Transparent, Color(0x40000000)))
+                    else Brush.horizontalGradient(
+                        if (isRtl) listOf(Color.Transparent, Color.Transparent, Color(0x40000000))
+                        else listOf(Color(0x40000000), Color.Transparent, Color.Transparent)
+                    ),
+                    4f,
+                )
             }
-            else -> {
-                drawRoundRect(inactive, cornerRadius = r)
-                filled(SolidColor(active))
-            }
+            else -> layer(SolidColor(if (isEnabled) colors.activeTrackColor else colors.disabledActiveTrackColor))
         }
     }
 }
