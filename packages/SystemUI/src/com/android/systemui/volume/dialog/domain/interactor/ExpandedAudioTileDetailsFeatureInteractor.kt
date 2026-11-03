@@ -16,16 +16,41 @@
 
 package com.android.systemui.volume.dialog.domain.interactor
 
+import android.content.Context
+import android.os.UserHandle
+import android.provider.Settings
 import com.android.systemui.dagger.SysUISingleton
+import com.android.systemui.dagger.qualifiers.Application
 import com.android.systemui.qs.flags.ExpandedAudioDetailedView
 import com.android.systemui.qs.flags.QsDetailedView
 import javax.inject.Inject
 
 @SysUISingleton
-class ExpandedAudioTileDetailsFeatureInteractor @Inject constructor() {
+class ExpandedAudioTileDetailsFeatureInteractor
+@Inject
+constructor(@Application private val context: Context) {
     private val isEnabled = QsDetailedView.isEnabled && ExpandedAudioDetailedView.isEnabled
 
     fun isEnabled(): Boolean {
         return isEnabled
+    }
+
+    /**
+     * DriftVaneOS: the volume dialog is horizontal at the top of the screen (TouchWiz style) when
+     * the user turns it on, or when the platform feature asks for it.
+     */
+    fun isVolumeDialogVertical(): Boolean {
+        val top =
+            Settings.System.getIntForUser(
+                context.contentResolver,
+                KEY_VOLUME_PANEL_TOP,
+                0,
+                UserHandle.USER_CURRENT,
+            ) == 1
+        return !(isEnabled || top)
+    }
+
+    companion object {
+        const val KEY_VOLUME_PANEL_TOP = "driftvane_volume_panel_top"
     }
 }

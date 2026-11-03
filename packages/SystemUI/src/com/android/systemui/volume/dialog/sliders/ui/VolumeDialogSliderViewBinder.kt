@@ -67,7 +67,8 @@ constructor(
 ) {
     fun bind(view: View) {
         // Use horizontal volume dialog if the audio tile details view is enabled
-        val isVolumeDialogVertical = !expandedAudioTileDetailsFeatureInteractor.isEnabled()
+        val isVolumeDialogVertical =
+            expandedAudioTileDetailsFeatureInteractor.isVolumeDialogVertical()
         val sliderComposeViewId =
             if (isVolumeDialogVertical) {
                 R.id.volume_dialog_slider

@@ -59,7 +59,8 @@ constructor(
 ) {
 
     // Use horizontal volume dialog if the audio tile details view is enabled
-    private val isVolumeDialogVertical = !expandedAudioTileDetailsFeatureInteractor.isEnabled()
+    private val isVolumeDialogVertical
+        get() = expandedAudioTileDetailsFeatureInteractor.isVolumeDialogVertical()
     private var dismissJob: Job? = null
 
     fun launchVolumeDialog() {
