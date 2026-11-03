@@ -16,6 +16,7 @@
 
 package com.android.systemui.statusbar.notification.interruption
 
+import com.android.systemui.axdynamicbar.domain.AxDynamicBarSettings
 import android.Manifest.permission.RECEIVE_EMERGENCY_BROADCAST
 import android.app.Notification
 import android.app.Notification.BubbleMetadata
@@ -112,6 +113,15 @@ class PeekDisabledSuppressor(
 
         observer.onChange(/* selfChange= */ true)
     }
+}
+
+class PeekAxDynamicBarSuppressor(
+    private val settings: AxDynamicBarSettings,
+) : VisualInterruptionCondition(
+    types = setOf(PEEK),
+    reason = "suppressed by AxDynamicBar"
+) {
+    override fun shouldSuppress(): Boolean = settings.isNotificationEventsActive()
 }
 
 class PulseDisabledSuppressor(

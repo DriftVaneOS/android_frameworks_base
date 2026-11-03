@@ -16,6 +16,10 @@
 
 package com.android.systemui.dagger
 
+import dagger.multibindings.IntoSet
+import com.android.systemui.statusbar.chips.ui.viewmodel.OngoingActivityChipsRefiner
+import com.android.systemui.axdynamicbar.ui.AxDynamicBarManager
+import com.android.systemui.axdynamicbar.domain.AxDynamicBarChipsRefiner
 import com.android.keyguard.KeyguardBiometricLockoutLogger
 import com.android.systemui.CoreStartable
 import com.android.systemui.LatencyTester
@@ -329,4 +333,14 @@ abstract class SystemUICoreStartableModule {
     abstract fun bindSysUIKeyGestureEventInitializer(
         keyGestureEventInitializer: SysUIKeyGestureEventInitializer
     ): CoreStartable
+
+    // DriftVaneOS: dynamic bar, ported from crDroid (originally by AxionOS / rmp22)
+    @Binds
+    @IntoMap
+    @ClassKey(AxDynamicBarManager::class)
+    abstract fun bindAxDynamicBarManager(impl: AxDynamicBarManager): CoreStartable
+
+    @Binds
+    @IntoSet
+    abstract fun bindDynamicBarChipsRefiner(impl: AxDynamicBarChipsRefiner): OngoingActivityChipsRefiner
 }

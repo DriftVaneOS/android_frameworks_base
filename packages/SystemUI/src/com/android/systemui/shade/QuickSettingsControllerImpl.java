@@ -17,6 +17,7 @@
 
 package com.android.systemui.shade;
 
+import com.android.systemui.util.ScrimUtils;
 import static android.view.WindowInsets.Type.ime;
 
 import static com.android.systemui.Flags.shadeQsvisibleLogic;
@@ -1356,6 +1357,7 @@ public class QuickSettingsControllerImpl implements QuickSettingsController, Dum
             int clipTop = (int) (top - currentTranslation - mQsFrame.getTop());
             int clipBottom = (int) (bottom - currentTranslation - mQsFrame.getTop());
             mVisible = qsVisible;
+            ScrimUtils.get().setQsVisible(mVisible);
             mQs.setQsVisible(qsVisible);
             if (mEnableClipping) {
                 mQs.setFancyClipping(

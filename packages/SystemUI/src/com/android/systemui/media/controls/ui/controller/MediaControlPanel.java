@@ -16,6 +16,7 @@
 
 package com.android.systemui.media.controls.ui.controller;
 
+import com.android.systemui.media.MediaSessionManager;
 import static android.provider.Settings.ACTION_MEDIA_CONTROLS_SETTINGS;
 
 import static com.android.systemui.Flags.communalHub;
@@ -915,6 +916,10 @@ public class MediaControlPanel {
                     return;
                 }
                 mArtworkBoundId = reqId;
+                MediaSessionManager.Companion.get().onAlbumArtChanged(artwork);
+                if (colorScheme != null) {
+                    MediaSessionManager.Companion.get().onMediaColorsChanged(colorScheme.getAccent1().getS100());
+                }
 
                 // Transition Colors to current color scheme
                 boolean colorSchemeChanged;
@@ -965,6 +970,10 @@ public class MediaControlPanel {
                         appIconView.setImageResource(R.drawable.ic_music_note);
                         appIconView.setColorFilter(Color.WHITE);
                     }
+                }
+                Drawable resolvedAppIcon = appIconView.getDrawable();
+                if (resolvedAppIcon != null) {
+                    MediaSessionManager.Companion.get().onAppIconChanged(resolvedAppIcon);
                 }
                 Trace.endAsyncSection(traceName, traceCookie);
             });

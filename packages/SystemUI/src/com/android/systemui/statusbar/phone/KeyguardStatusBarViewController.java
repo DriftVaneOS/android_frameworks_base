@@ -16,6 +16,8 @@
 
 package com.android.systemui.statusbar.phone;
 
+import com.android.systemui.axdynamicbar.ui.AxDynamicBarChipViewModel;
+import android.widget.TextView;
 import static android.app.StatusBarManager.DISABLE2_SYSTEM_ICONS;
 import static android.app.StatusBarManager.DISABLE_SYSTEM_INFO;
 
@@ -159,6 +161,7 @@ public class KeyguardStatusBarViewController extends ViewController<KeyguardStat
     private final OccludedToLockscreenTransitionViewModel mOccludedToLockscreenTransitionViewModel;
     private final DreamViewModel mDreamViewModel;
     private final KeyguardInteractor mKeyguardInteractor;
+    private final AxDynamicBarChipViewModel mAxDynamicBarChipViewModel;
 
     @Nullable private ComposeView mBatteryComposeView;
     private ViewGroup mSystemIconsContainer;
@@ -378,7 +381,8 @@ public class KeyguardStatusBarViewController extends ViewController<KeyguardStat
             GoneToGlanceableHubTransitionViewModel goneToGlanceableHubTransitionViewModel,
             OccludedToLockscreenTransitionViewModel occludedToLockscreenTransitionViewModel,
             DreamViewModel dreamViewModel,
-            KeyguardInteractor keyguardInteractor) {
+            KeyguardInteractor keyguardInteractor,
+            AxDynamicBarChipViewModel axDynamicBarChipViewModel) {
         super(view);
         mCoroutineDispatcher = dispatcher;
         mContext = context;
@@ -409,6 +413,7 @@ public class KeyguardStatusBarViewController extends ViewController<KeyguardStat
         mOccludedToLockscreenTransitionViewModel = occludedToLockscreenTransitionViewModel;
         mDreamViewModel = dreamViewModel;
         mKeyguardInteractor = keyguardInteractor;
+        mAxDynamicBarChipViewModel = axDynamicBarChipViewModel;
 
         mFirstBypassAttempt = mKeyguardBypassController.getBypassEnabled();
         if (!SceneContainerFlag.isEnabled()) {
@@ -518,6 +523,19 @@ public class KeyguardStatusBarViewController extends ViewController<KeyguardStat
                     (alpha) -> setAlpha(alpha), mCoroutineDispatcher);
         if (Flags.bouncerUiRevamp()) {
             collectFlow(mView, mKeyguardInteractor.primaryBouncerShowing, x -> updateViewState());
+        }
+        // DriftVaneOS: feed the carrier name to the dynamic bar's lockscreen chip
+        TextView carrierLabel = mView.findViewById(R.id.keyguard_carrier_text);
+        if (carrierLabel != null) {
+            carrierLabel.addTextChangedListener(new android.text.TextWatcher() {
+                @Override public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
+                @Override public void onTextChanged(CharSequence s, int start, int before, int count) {}
+                @Override public void afterTextChanged(android.text.Editable s) {
+                    mAxDynamicBarChipViewModel.updateKeyguardCarrierText(s.toString());
+                }
+            });
+            mAxDynamicBarChipViewModel.updateKeyguardCarrierText(
+                    carrierLabel.getText().toString());
         }
         if (NewStatusBarIcons.isEnabled() && !SystemStatusIconsInCompose.isEnabled()) {
             if (!SceneContainerFlag.isEnabled()) {

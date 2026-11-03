@@ -573,6 +573,7 @@ android_library {
         "uilatencystats_flags_core_java_lib",
         "personalcontext_ace_visualizer",
         "vendor.lineage.powershare-V1-java",
+        "ax_blur", // DriftVaneOS: dynamic bar (from crDroid / AxionOS)
     ],
     enable_ksp: true,
     annotation_processor_flags: [
@@ -784,6 +785,7 @@ android_library {
         "dynamiccolors",
         "SurfaceEffectsComposeLib",
         "vendor.lineage.powershare-V1-java",
+        "ax_blur", // DriftVaneOS: dynamic bar (from crDroid / AxionOS)
     ],
 }
 

@@ -16,6 +16,7 @@
 
 package com.android.systemui.statusbar.phone;
 
+import com.android.systemui.util.ScrimUtils;
 import static com.android.systemui.keyguard.WakefulnessLifecycle.WAKEFULNESS_AWAKE;
 import static com.android.systemui.keyguard.WakefulnessLifecycle.WAKEFULNESS_WAKING;
 
@@ -300,6 +301,7 @@ public final class DozeServiceHost implements DozeHost {
         for (Callback callback : mCallbacks) {
             callback.onDozingChanged(dozing);
         }
+            ScrimUtils.get().onDozingChanged(dozing);
         mDozeInteractor.setIsDozing(dozing);
         mStatusBarStateController.setIsDozing(dozing);
     }
@@ -343,6 +345,8 @@ public final class DozeServiceHost implements DozeHost {
             }
 
             private void setPulsing(boolean pulsing) {
+
+                ScrimUtils.get().setPulsing(pulsing);
                 mStatusBarKeyguardViewManager.setPulsing(pulsing);
                 mShadeLockscreenInteractor.setPulsing(pulsing);
                 mStatusBarStateController.setPulsing(pulsing);

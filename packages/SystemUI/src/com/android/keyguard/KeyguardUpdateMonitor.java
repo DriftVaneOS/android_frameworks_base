@@ -16,6 +16,7 @@
 
 package com.android.keyguard;
 
+import com.android.systemui.util.ScrimUtils;
 import static android.app.StatusBarManager.SESSION_KEYGUARD;
 import static android.app.WindowConfiguration.ACTIVITY_TYPE_ASSISTANT;
 import static android.app.WindowConfiguration.ACTIVITY_TYPE_STANDARD;
@@ -2119,6 +2120,8 @@ public class KeyguardUpdateMonitor implements TrustManager.TrustListener, CoreSt
             }
         }
         Trace.endSection();
+
+        ScrimUtils.get().onStartedWakingUp();
     }
 
     protected void handleStartedGoingToSleep(int arg1) {
@@ -2155,6 +2158,7 @@ public class KeyguardUpdateMonitor implements TrustManager.TrustListener, CoreSt
     private void handleScreenTurnedOff() {
         Assert.isMainThread();
         mHardwareFingerprintUnavailableRetryCount = 0;
+        ScrimUtils.get().onScreenTurnedOff();
     }
 
     private void handleDreamingStateChanged(int dreamStart) {
@@ -2753,6 +2757,7 @@ public class KeyguardUpdateMonitor implements TrustManager.TrustListener, CoreSt
         public void onUserChanged(int newUser, Context userContext) {
             mHandler.sendMessage(mHandler.obtainMessage(MSG_USER_SWITCH_COMPLETE,
                     newUser, 0));
+            ScrimUtils.get().onUserChanged();
         }
     };
 

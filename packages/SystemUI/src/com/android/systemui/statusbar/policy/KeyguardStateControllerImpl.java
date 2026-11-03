@@ -16,6 +16,7 @@
 
 package com.android.systemui.statusbar.policy;
 
+import com.android.systemui.util.ScrimUtils;
 import static android.hardware.biometrics.BiometricSourceType.FACE;
 
 import static com.android.systemui.flags.Flags.LOCKSCREEN_ENABLE_LANDSCAPE;
@@ -255,6 +256,7 @@ public class KeyguardStateControllerImpl implements KeyguardStateController {
                     keyguardFadingAway ? 1 : 0);
             mKeyguardFadingAway = keyguardFadingAway;
             invokeForEachCallback(Callback::onKeyguardFadingAwayChanged);
+            ScrimUtils.get().onKeyguardFadingAwayChanged(keyguardFadingAway);
         }
     }
 
@@ -371,6 +373,7 @@ public class KeyguardStateControllerImpl implements KeyguardStateController {
             mKeyguardGoingAway = keyguardGoingAway;
             mKeyguardInteractorLazy.get().setIsKeyguardGoingAway(keyguardGoingAway);
             invokeForEachCallback(Callback::onKeyguardGoingAwayChanged);
+            ScrimUtils.get().onKeyguardGoingAwayChanged(keyguardGoingAway);
         }
     }
 
@@ -380,6 +383,8 @@ public class KeyguardStateControllerImpl implements KeyguardStateController {
             mPrimaryBouncerShowing = showing;
 
             invokeForEachCallback(Callback::onPrimaryBouncerShowingChanged);
+
+            ScrimUtils.get().onPrimaryBouncerShowingChanged(showing);
         }
     }
 

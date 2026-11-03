@@ -16,6 +16,9 @@
 
 package com.android.systemui.statusbar.pipeline.shared.ui.composable
 
+import com.android.systemui.axdynamicbar.ui.compose.AxDynamicBarChip
+import com.android.systemui.axdynamicbar.ui.AxDynamicBarChipViewModel
+import androidx.compose.runtime.collectAsState
 import android.content.Context
 import android.graphics.Rect
 import android.view.LayoutInflater
@@ -149,6 +152,7 @@ constructor(
     @DisplayAware private val headlineViewModelFactory: HeadlineViewModel.Factory,
     private val statusBarRegionSamplingViewModelFactory: StatusBarRegionSamplingViewModel.Factory,
     private val shadeWindowRootView: WindowRootView,
+    private val axDynamicBarChipViewModel: AxDynamicBarChipViewModel,
 ) {
     fun create(root: ViewGroup, andThen: (ViewGroup) -> Unit): ComposeView {
         val composeView = ComposeView(root.context)
@@ -172,6 +176,7 @@ constructor(
                         eventAnimationInteractor = eventAnimationInteractor,
                         statusBarRegionSamplingViewModelFactory =
                             statusBarRegionSamplingViewModelFactory,
+                        axDynamicBarChipViewModel = axDynamicBarChipViewModel,
                         onViewCreated = andThen,
                         modifier = Modifier.sysUiResTagContainer(),
                     )
@@ -210,6 +215,7 @@ fun StatusBarRoot(
     darkIconDispatcher: DarkIconDispatcher,
     eventAnimationInteractor: SystemStatusEventAnimationInteractor,
     statusBarRegionSamplingViewModelFactory: StatusBarRegionSamplingViewModel.Factory,
+    axDynamicBarChipViewModel: AxDynamicBarChipViewModel,
     onViewCreated: (ViewGroup) -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -268,6 +274,7 @@ fun StatusBarRoot(
                     statusBarViewModel = statusBarViewModel,
                     iconViewStore = iconViewStore,
                     appHandlesViewModel = appHandlesViewModel,
+                    axDynamicBarChipViewModel = axDynamicBarChipViewModel,
                     context = context,
                 )
 
@@ -396,6 +403,7 @@ private fun addStartSideComposable(
     statusBarViewModel: HomeStatusBarViewModel,
     iconViewStore: NotificationIconContainerViewBinder.IconViewStore?,
     appHandlesViewModel: AppHandlesViewModel,
+    axDynamicBarChipViewModel: AxDynamicBarChipViewModel,
     context: Context,
 ) {
     val startSideExceptHeadsUp =
@@ -414,9 +422,8 @@ private fun addStartSideComposable(
                         LinearLayout.LayoutParams.MATCH_PARENT,
                     )
                     .apply {
-                        if (showDate || ClockModernization.isEnabled) {
-                            gravity = android.view.Gravity.CENTER_VERTICAL
-                        }
+                        // DriftVaneOS: always center so the dynamic bar chip lines up
+                        gravity = android.view.Gravity.CENTER_VERTICAL
                     }
 
             setContent {
@@ -509,6 +516,14 @@ private fun addStartSideComposable(
                         )
                     }
 
+                // DriftVaneOS: dynamic bar chip (ported from crDroid)
+                val axEnabled by axDynamicBarChipViewModel.interactor.settings.isEnabled.collectAsState()
+                if (axEnabled) {
+                    AxDynamicBarChip(
+                        viewModel = axDynamicBarChipViewModel,
+                        modifier = Modifier.widthIn(max = chipsMaxWidth),
+                    )
+                }
                 val chipsVisibilityModel = statusBarViewModel.ongoingActivityChips
                 if (chipsVisibilityModel.areChipsAllowed) {
                     OngoingActivityChips(
