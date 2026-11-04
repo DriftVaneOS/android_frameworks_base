@@ -1,0 +1,30 @@
+//
+// SPDX-FileCopyrightText: DriftVaneOS
+// SPDX-License-Identifier: Apache-2.0
+//
+// DriftVane lock screen clocks, loaded by SystemUI as a clock plugin.
+// Every clock exposes sliders/toggles in Wallpaper & style.
+//
+
+package {
+    default_applicable_licenses: ["frameworks_base_packages_SystemUI_license"],
+}
+
+android_app {
+    name: "DriftVaneClocks",
+    manifest: "AndroidManifest.xml",
+    srcs: ["src/**/*.kt"],
+    resource_dirs: ["res"],
+    use_resource_processor: true,
+    libs: ["SystemUIPluginLib"],
+    static_libs: ["SystemUIClocks-CommonLib"],
+    kotlincflags: ["-Xjvm-default=all"],
+    min_sdk_version: "current",
+    system_ext_specific: true,
+    platform_apis: true,
+    certificate: "platform",
+    privileged: true,
+    optimize: {
+        enabled: false,
+    },
+}

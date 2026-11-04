@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="dv_tall_name">DriftVane Tall</string>
+    <string name="dv_tall_desc">Tall stacked numbers</string>
+    <string name="dv_glass_name">DriftVane Glass</string>
+    <string name="dv_glass_desc">Time and date on a glass card</string>
+    <string name="dv_flow_name">DriftVane Flow</string>
+    <string name="dv_flow_desc">Wide clock with a drift line</string>
+
+    <string name="ax_weight">Weight</string>
+    <string name="ax_weight_desc">How bold the numbers are</string>
+    <string name="ax_width">Width</string>
+    <string name="ax_width_desc">Narrow or wide numbers</string>
+    <string name="ax_height">Height</string>
+    <string name="ax_height_desc">Stretch the numbers taller</string>
+    <string name="ax_slant">Slant</string>
+    <string name="ax_slant_desc">Lean the numbers forward</string>
+    <string name="ax_twotone">Two-tone</string>
+    <string name="ax_twotone_desc">Hours in your accent color</string>
+    <string name="ax_outline">Outline</string>
+    <string name="ax_outline_desc">Hollow numbers</string>
+    <string name="ax_stack">Stacked</string>
+    <string name="ax_stack_desc">Hours above minutes</string>
+    <string name="ax_glass">Glass card</string>
+    <string name="ax_glass_desc">Frosted card behind the clock</string>
+    <string name="ax_align">Alignment</string>
+    <string name="ax_align_desc">Left, center or right</string>
+    <string name="ax_date">Date</string>
+    <string name="ax_date_desc">Show the date under the time</string>
+    <string name="ax_line">Drift line</string>
+    <string name="ax_line_desc">Accent line under the time</string>
+</resources>
