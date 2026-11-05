@@ -18,6 +18,7 @@
 package com.android.systemui.keyguard.ui.view.layout.blueprints
 
 import com.android.systemui.keyguard.ui.view.layout.sections.AxDynamicBarKeyguardChipSection
+import com.android.systemui.keyguard.ui.view.layout.sections.DriftGlanceStackSection
 import com.android.systemui.dagger.SysUISingleton
 import com.android.systemui.keyguard.shared.model.KeyguardBlueprint
 import com.android.systemui.keyguard.shared.model.KeyguardSection
@@ -71,6 +72,7 @@ constructor(
     keyguardSliceViewSection: KeyguardSliceViewSection,
     udfpsAccessibilityOverlaySection: DefaultUdfpsAccessibilityOverlaySection,
     axDynamicBarKeyguardChipSection: AxDynamicBarKeyguardChipSection,
+    driftGlanceStackSection: DriftGlanceStackSection,
 ) : KeyguardBlueprint {
     override val id: String = DEFAULT
 
@@ -85,6 +87,7 @@ constructor(
             batteryChargingPopupMenuSection.getOrNull(),
             defaultStatusBarSection,
             defaultNotificationStackScrollLayoutSection,
+            driftGlanceStackSection, // DriftVaneOS: after notifications, so it can end them above the stack
             aodNotificationIconsSection,
             aodPromotedNotificationSection,
             smartspaceSection,
