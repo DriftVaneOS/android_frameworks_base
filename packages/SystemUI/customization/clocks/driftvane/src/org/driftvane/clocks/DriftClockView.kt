@@ -111,7 +111,10 @@ class DriftClockView(context: Context, private val isLarge: Boolean) : View(cont
     private val showGlass get() = isLarge && style.glass && dozing < 0.5f
     private val showLine get() = isLarge && style.line
 
-    private fun textSize(): Float = if (isLarge) baseSizePx * (if (stacked) 1.15f else 1f) else baseSizePx
+    /** Shrinks the clock so it always fits the space it's given (no clipping, no overlap). */
+    private var fit = 1f
+
+    private fun textSize(): Float = baseSizePx * fit
     private fun vScale(): Float = style.height.coerceIn(100f, 200f) / 100f
     private fun hScale(): Float = if (variableFont) 1f else style.width.coerceIn(25f, 151f) / 100f
     private fun pad(): Float = if (showGlass) textSize() * 0.22f else 0f
@@ -122,16 +125,32 @@ class DriftClockView(context: Context, private val isLarge: Boolean) : View(cont
 
     private fun lineHeight(): Float = textSize() * 0.80f * vScale()
 
-    override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
+    private fun neededSize(): Pair<Float, Float> {
         timePaint.textSize = textSize()
         timePaint.textScaleX = hScale()
-        val textW = lines().maxOf { timePaint.measureText(it.first) } + textSize() * 0.12f * style.slant / 12f
+        // a little extra for the slant and the glyph overhang so nothing gets cut off
+        val textW = lines().maxOf { timePaint.measureText(it.first) } * 1.04f + textSize() * 0.25f * style.slant / 12f
         var h = lineHeight() * lines().size + (if (stacked) textSize() * 0.04f else 0f)
         if (showDate) h += textSize() * 0.32f
         if (showLine) h += textSize() * 0.16f
         val p = pad()
-        val w = resolveSize((textW + p * 2).toInt() + 2, widthMeasureSpec)
-        setMeasuredDimension(w, resolveSize((h + p * 2).toInt() + 2, heightMeasureSpec))
+        return (textW + p * 2) to (h + p * 2)
+    }
+
+    override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
+        fit = 1f
+        val (needW, needH) = neededSize()
+        val wMode = MeasureSpec.getMode(widthMeasureSpec)
+        val hMode = MeasureSpec.getMode(heightMeasureSpec)
+        val screen = resources.displayMetrics
+        val availW = if (wMode == MeasureSpec.UNSPECIFIED) screen.widthPixels * 0.9f
+            else MeasureSpec.getSize(widthMeasureSpec).toFloat()
+        // the big clock may use about a third of the screen height, never more
+        var maxH = if (isLarge) screen.heightPixels * 0.30f else Float.MAX_VALUE
+        if (hMode != MeasureSpec.UNSPECIFIED) maxH = minOf(maxH, MeasureSpec.getSize(heightMeasureSpec).toFloat())
+        fit = minOf(1f, availW * 0.96f / needW, maxH / needH).coerceAtLeast(0.2f)
+        val (w, h) = neededSize()
+        setMeasuredDimension(resolveSize(w.toInt() + 2, widthMeasureSpec), resolveSize(h.toInt() + 2, heightMeasureSpec))
     }
 
     override fun onDraw(canvas: Canvas) {

@@ -32,7 +32,7 @@ object DriftClocks {
     val ALL = listOf(TALL, GLASS, FLOW)
 
     fun defaults(id: String): DriftStyle = when (id) {
-        TALL -> DriftStyle(weight = 650f, width = 40f, height = 150f, stacked = true, twoTone = true)
+        TALL -> DriftStyle(weight = 650f, width = 40f, height = 130f, stacked = true, twoTone = true)
         GLASS -> DriftStyle(weight = 800f, width = 100f, height = 100f, glass = true, date = true, align = 1f)
         else -> DriftStyle(weight = 900f, width = 120f, height = 100f, line = true, date = true)
     }
