@@ -55,7 +55,7 @@ constructor(
     val csdWarningConfigModel: CsdWarningConfigModel,
     private val uiEventLogger: UiEventLogger,
     private val broadcastDispatcher: BroadcastDispatcher,
-    expandedAudioTileDetailsFeatureInteractor: ExpandedAudioTileDetailsFeatureInteractor,
+    private val expandedAudioTileDetailsFeatureInteractor: ExpandedAudioTileDetailsFeatureInteractor,
 ) {
 
     // Use horizontal volume dialog if the audio tile details view is enabled

@@ -34,7 +34,7 @@ class VolumeDialogOverscrollViewBinder
 @Inject
 constructor(
     private val viewModel: VolumeDialogOverscrollViewModel,
-    expandedAudioTileDetailsFeatureInteractor: ExpandedAudioTileDetailsFeatureInteractor,
+    private val expandedAudioTileDetailsFeatureInteractor: ExpandedAudioTileDetailsFeatureInteractor,
 ) {
 
     // Use horizontal volume dialog if the audio tile details view is enabled

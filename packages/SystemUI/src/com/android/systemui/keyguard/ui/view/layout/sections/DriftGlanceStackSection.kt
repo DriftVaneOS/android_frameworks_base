@@ -23,7 +23,6 @@ import dagger.Lazy
 import javax.inject.Inject
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.launch
 
@@ -60,7 +59,7 @@ constructor(
         settingJob?.cancel()
         settingJob =
             scope.launch {
-                repo.enabled.distinctUntilChanged().drop(1).collect {
+                repo.enabled.drop(1).collect {
                     blueprintInteractor.get().refreshBlueprint()
                 }
             }
