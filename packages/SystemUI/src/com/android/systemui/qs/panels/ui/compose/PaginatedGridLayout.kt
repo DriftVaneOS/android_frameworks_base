@@ -45,6 +45,7 @@ import com.android.systemui.common.ui.compose.PagerDots
 import com.android.systemui.compose.modifiers.sysuiResTag
 import com.android.systemui.development.ui.compose.BuildNumber
 import com.android.systemui.development.ui.viewmodel.BuildNumberViewModel
+import com.android.systemui.driftvane.qs.DriftQsStyle
 import com.android.systemui.lifecycle.rememberViewModel
 import com.android.systemui.qs.panels.dagger.PaginatedBaseLayoutType
 import com.android.systemui.qs.panels.ui.compose.Dimensions.FooterHeight
@@ -196,7 +197,10 @@ private fun FooterBar(
         }
         PagerDots(
             pagerState = pagerState,
-            activeColor = MaterialTheme.colorScheme.onSurfaceVariant,
+            // DriftVaneOS: Classic Quick Settings shows the current page in the accent color
+            activeColor =
+                if (DriftQsStyle.classic) MaterialTheme.colorScheme.primary
+                else MaterialTheme.colorScheme.onSurfaceVariant,
             nonActiveColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = .5f),
             modifier = Modifier.wrapContentWidth(),
             showArrows = showArrowsInPager,

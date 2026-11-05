@@ -88,6 +88,7 @@ import com.android.systemui.lifecycle.rememberViewModel
 import com.android.systemui.qs.flags.QsDetailedView
 import com.android.systemui.qs.panels.ui.compose.BounceableInfo
 import com.android.systemui.qs.panels.ui.compose.Tooltip
+import com.android.systemui.driftvane.qs.DriftQsStyle
 import com.android.systemui.qs.panels.ui.compose.infinitegrid.CommonTileDefaults.ActiveIconCornerRadius
 import com.android.systemui.qs.panels.ui.compose.infinitegrid.CommonTileDefaults.ActiveTileCornerRadius
 import com.android.systemui.qs.panels.ui.compose.infinitegrid.CommonTileDefaults.InactiveIconCornerRadius
@@ -586,6 +587,15 @@ private object TileDefaults {
     @Composable
     @ReadOnlyComposable
     fun getColorForState(uiState: TileUiState, iconOnly: Boolean): TileColors {
+        // DriftVaneOS: Classic Quick Settings fills the whole tile with the accent color when
+        // it's on (no separate icon circle), like Android 13.
+        if (DriftQsStyle.classic) {
+            return when (uiState.visualState) {
+                STATE_ACTIVE -> activeTileColors()
+                STATE_INACTIVE -> inactiveTileColors()
+                else -> unavailableTileColors()
+            }
+        }
         return when (uiState.visualState) {
             STATE_ACTIVE -> {
                 if (uiState.handlesToggleClick && !iconOnly) {
@@ -618,6 +628,8 @@ private object TileDefaults {
 
     @Composable
     fun tileRadius(uiState: TileUiState): Dp {
+        // DriftVaneOS: Classic Quick Settings uses one rounded-rectangle shape for every state.
+        if (DriftQsStyle.classic) return ActiveTileCornerRadius
         return when (uiState.visualState) {
             STATE_ACTIVE -> ActiveTileCornerRadius
             STATE_INACTIVE -> InactiveTileCornerRadius

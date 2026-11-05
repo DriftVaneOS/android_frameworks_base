@@ -19,6 +19,7 @@ package com.android.systemui.qs.panels.domain.interactor
 import com.android.internal.logging.UiEventLogger
 import com.android.systemui.dagger.SysUISingleton
 import com.android.systemui.dagger.qualifiers.Background
+import com.android.systemui.driftvane.qs.DriftQsStyleRepository
 import com.android.systemui.log.LogBuffer
 import com.android.systemui.log.core.LogLevel
 import com.android.systemui.qs.QSEditEvent
@@ -30,6 +31,8 @@ import com.android.systemui.qs.pipeline.shared.metricSpec
 import javax.inject.Inject
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.stateIn
 
@@ -44,18 +47,34 @@ constructor(
     private val uiEventLogger: UiEventLogger,
     @PanelsLog private val logBuffer: LogBuffer,
     @Background private val scope: CoroutineScope,
+    driftQsStyle: DriftQsStyleRepository,
 ) {
 
-    val largeTilesSpecs =
+    /** The large tiles the user picked (what edits read and write). */
+    private val savedLargeTilesSpecs =
         preferencesInteractor.largeTilesSpecs
             .onEach { logChange(it) }
+            .stateIn(scope, SharingStarted.Eagerly, repo.defaultLargeTiles)
+
+    /**
+     * The large tiles to show. DriftVaneOS: with Classic Quick Settings on, every tile is large
+     * (two per row); the user's own pick is kept for when Classic is turned off.
+     */
+    val largeTilesSpecs: StateFlow<Set<TileSpec>> =
+        combine(
+                savedLargeTilesSpecs,
+                driftQsStyle.classic,
+                currentTilesInteractor.currentTiles,
+            ) { saved, classic, current ->
+                if (classic) current.map { it.spec }.toSet() else saved
+            }
             .stateIn(scope, SharingStarted.Eagerly, repo.defaultLargeTiles)
 
     fun isIconTile(spec: TileSpec): Boolean = !largeTilesSpecs.value.contains(spec)
 
     /** Set the large tiles to be [specs] */
     fun addLargeTile(spec: TileSpec) {
-        preferencesInteractor.setLargeTilesSpecs(largeTilesSpecs.value + spec)
+        preferencesInteractor.setLargeTilesSpecs(savedLargeTilesSpecs.value + spec)
     }
 
     /** Set the large tiles to be [specs] */
@@ -77,16 +96,16 @@ constructor(
             return
         }
 
-        val isIcon = !largeTilesSpecs.value.contains(spec)
+        val isIcon = !savedLargeTilesSpecs.value.contains(spec)
         if (toIcon && !isIcon) {
-            preferencesInteractor.setLargeTilesSpecs(largeTilesSpecs.value - spec)
+            preferencesInteractor.setLargeTilesSpecs(savedLargeTilesSpecs.value - spec)
             uiEventLogger.log(
                 /* event= */ QSEditEvent.QS_EDIT_RESIZE_SMALL,
                 /* uid= */ 0,
                 /* packageName= */ spec.metricSpec,
             )
         } else if (!toIcon && isIcon) {
-            preferencesInteractor.setLargeTilesSpecs(largeTilesSpecs.value + spec)
+            preferencesInteractor.setLargeTilesSpecs(savedLargeTilesSpecs.value + spec)
             uiEventLogger.log(
                 /* event= */ QSEditEvent.QS_EDIT_RESIZE_LARGE,
                 /* uid= */ 0,
