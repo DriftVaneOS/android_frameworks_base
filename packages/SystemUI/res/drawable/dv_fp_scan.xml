@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- SPDX-FileCopyrightText: DriftVaneOS
+     SPDX-License-Identifier: Apache-2.0 -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="48dp"
+    android:height="48dp"
+    android:viewportWidth="48"
+    android:viewportHeight="48">
+    <!-- Scan: scanner corners with a sweep line -->
+    <path android:fillColor="#00000000" android:strokeColor="#FFFFFFFF" android:strokeLineCap="round" android:strokeWidth="3" android:pathData="M6,16 V10 a4,4 0 0,1 4,-4 H16 M32,6 H38 a4,4 0 0,1 4,4 V16 M42,32 V38 a4,4 0 0,1 -4,4 H32 M16,42 H10 a4,4 0 0,1 -4,-4 V32" />
+    <path android:fillColor="#00000000" android:strokeColor="#FFFFFFFF" android:strokeLineCap="round" android:strokeWidth="2.4" android:pathData="M12,24 H36" />
+    <path android:fillColor="#00000000" android:strokeColor="#FFFFFFFF" android:strokeLineCap="round" android:strokeWidth="1.6" android:strokeAlpha="0.4" android:pathData="M16,18 H32 M16,30 H32" />
+</vector>

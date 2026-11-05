@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- SPDX-FileCopyrightText: DriftVaneOS
+     SPDX-License-Identifier: Apache-2.0 -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="48dp"
+    android:height="48dp"
+    android:viewportWidth="48"
+    android:viewportHeight="48">
+    <!-- Vane: the DriftVaneOS drift lines and arrow -->
+    <path android:fillColor="#00000000" android:strokeColor="#FFFFFFFF" android:strokeLineCap="round" android:strokeWidth="2.2" android:strokeAlpha="0.4" android:pathData="M8,38 C16,40 22,34 28,31 C33,28.5 37,28 41,27" />
+    <path android:fillColor="#00000000" android:strokeColor="#FFFFFFFF" android:strokeLineCap="round" android:strokeWidth="2.8" android:strokeAlpha="0.7" android:pathData="M7,31 C15,33 21,27 27,23.5 C32,20.5 36,19.5 40,18.5" />
+    <path android:fillColor="#00000000" android:strokeColor="#FFFFFFFF" android:strokeLineCap="round" android:strokeWidth="3.6" android:pathData="M6,23 C14,25 20,18 26,14 C30,11.5 33,10.5 37,9.5" />
+    <path android:fillColor="#FFFFFFFF" android:pathData="M43,5 L35,15 L32.5,6.5 Z" />
+</vector>

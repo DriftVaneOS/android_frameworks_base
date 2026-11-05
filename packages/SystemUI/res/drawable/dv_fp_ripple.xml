@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- SPDX-FileCopyrightText: DriftVaneOS
+     SPDX-License-Identifier: Apache-2.0 -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="48dp"
+    android:height="48dp"
+    android:viewportWidth="48"
+    android:viewportHeight="48">
+    <!-- Ripple: rings spreading out from the touch point -->
+    <path android:fillColor="#00000000" android:strokeColor="#FFFFFFFF" android:strokeLineCap="round" android:strokeWidth="2.6" android:pathData="M24,20 a4,4 0 1,1 -0.01,0" />
+    <path android:fillColor="#00000000" android:strokeColor="#FFFFFFFF" android:strokeLineCap="round" android:strokeWidth="2.4" android:strokeAlpha="0.85" android:pathData="M14.5,30 A11,11 0 0,1 24,13 A11,11 0 0,1 33.5,30" />
+    <path android:fillColor="#00000000" android:strokeColor="#FFFFFFFF" android:strokeLineCap="round" android:strokeWidth="2.2" android:strokeAlpha="0.6" android:pathData="M9.2,33 A17,17 0 0,1 24,7 A17,17 0 0,1 38.8,33" />
+    <path android:fillColor="#00000000" android:strokeColor="#FFFFFFFF" android:strokeLineCap="round" android:strokeWidth="2" android:strokeAlpha="0.35" android:pathData="M4.6,36 A22.5,22.5 0 0,1 24,1.5 A22.5,22.5 0 0,1 43.4,36" />
+</vector>

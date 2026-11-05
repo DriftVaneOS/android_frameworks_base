@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- SPDX-FileCopyrightText: DriftVaneOS
+     SPDX-License-Identifier: Apache-2.0 -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="48dp"
+    android:height="48dp"
+    android:viewportWidth="48"
+    android:viewportHeight="48">
+    <!-- Ring: a bold ring with a center dot -->
+    <path android:fillColor="#00000000" android:strokeColor="#FFFFFFFF" android:strokeLineCap="round" android:strokeWidth="3.4" android:pathData="M24,6 a18,18 0 1,1 -0.01,0" />
+    <path android:fillColor="#00000000" android:strokeColor="#FFFFFFFF" android:strokeLineCap="round" android:strokeWidth="1.6" android:strokeAlpha="0.45" android:pathData="M24,12.5 a11.5,11.5 0 1,1 -0.01,0" />
+    <path android:fillColor="#FFFFFFFF" android:pathData="M20,24 a4,4 0 1,0 8,0 a4,4 0 1,0 -8,0" />
+</vector>

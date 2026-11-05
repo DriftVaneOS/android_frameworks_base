@@ -18,6 +18,13 @@ package com.android.systemui.keyguard.ui.view
 
 import android.companion.virtualdevice.flags.Flags
 import android.content.Context
+import android.database.ContentObserver
+import android.graphics.drawable.Drawable
+import android.graphics.drawable.DrawableWrapper
+import android.os.Handler
+import android.os.Looper
+import android.os.UserHandle
+import android.provider.Settings
 import android.graphics.drawable.AnimatedStateListDrawable
 import android.graphics.drawable.AnimatedVectorDrawable
 import android.util.AttributeSet
@@ -63,6 +70,14 @@ constructor(
     var accessibilityHintType: AccessibilityHintType = AccessibilityHintType.NONE
 
     private var animatedIconDrawable: AnimatedStateListDrawable = AnimatedStateListDrawable()
+
+    // DriftVaneOS: swappable fingerprint icon (Settings.System driftvane_fp_icon)
+    private val fpDrawable: DrawableWrapper =
+        object : DrawableWrapper(context.getDrawable(R.drawable.ic_fingerprint)!!) {}
+    private val fpObserver =
+        object : ContentObserver(Handler(Looper.getMainLooper())) {
+            override fun onChange(selfChange: Boolean) = applyFingerprintStyle()
+        }
 
     init {
         setupIconStates()
@@ -127,7 +142,7 @@ constructor(
         // FINGERPRINT
         animatedIconDrawable.addState(
             getIconState(IconType.FINGERPRINT, false),
-            context.getDrawable(R.drawable.ic_fingerprint)!!,
+            fpDrawable,
             R.id.locked_fp,
         )
 
@@ -266,6 +281,42 @@ constructor(
         bgView.alpha = 0f
     }
 
+    override fun onAttachedToWindow() {
+        super.onAttachedToWindow()
+        runCatching {
+            context.contentResolver.registerContentObserver(
+                Settings.System.getUriFor(FP_STYLE_KEY), false, fpObserver, UserHandle.USER_ALL
+            )
+        }
+        applyFingerprintStyle()
+    }
+
+    override fun onDetachedFromWindow() {
+        runCatching { context.contentResolver.unregisterContentObserver(fpObserver) }
+        super.onDetachedFromWindow()
+    }
+
+    /** DriftVaneOS: pick the fingerprint icon style; 0 keeps the stock icon. */
+    private fun applyFingerprintStyle() {
+        val style = runCatching {
+            Settings.System.getIntForUser(context.contentResolver, FP_STYLE_KEY, 0, UserHandle.USER_CURRENT)
+        }.getOrDefault(0)
+        val res = when (style) {
+            1 -> R.drawable.dv_fp_ripple
+            2 -> R.drawable.dv_fp_dots
+            3 -> R.drawable.dv_fp_ring
+            4 -> R.drawable.dv_fp_vane
+            5 -> R.drawable.dv_fp_scan
+            else -> R.drawable.ic_fingerprint
+        }
+        val d: Drawable = context.getDrawable(res)?.mutate() ?: return
+        d.bounds = fpDrawable.bounds
+        iconView.imageTintList?.let { d.setTintList(it) }
+        fpDrawable.drawable = d
+        fpDrawable.invalidateSelf()
+        iconView.invalidate()
+    }
+
     fun getIconState(icon: IconType, aod: Boolean): IntArray {
         val lockIconState = IntArray(2)
         when (icon) {
@@ -295,3 +346,6 @@ constructor(
         ENTER,
     }
 }
+
+/** DriftVaneOS: Settings.System key for the lock screen fingerprint icon style. */
+private const val FP_STYLE_KEY = "driftvane_fp_icon"
