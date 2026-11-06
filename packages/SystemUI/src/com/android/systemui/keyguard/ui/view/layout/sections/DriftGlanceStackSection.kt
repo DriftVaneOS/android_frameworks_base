@@ -6,7 +6,7 @@
 package com.android.systemui.keyguard.ui.view.layout.sections
 
 import android.content.Context
-import androidx.constraintlayout.widget.Barrier
+import android.view.View
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.constraintlayout.widget.ConstraintSet
 import com.android.axion.compose.host.AxComposeView
@@ -14,7 +14,7 @@ import com.android.compose.theme.PlatformTheme
 import com.android.systemui.dagger.qualifiers.Application
 import com.android.systemui.driftvane.glance.DriftGlanceRepository
 import com.android.systemui.driftvane.glance.DriftGlanceStack
-import com.android.systemui.driftvane.glance.DriftGlanceStackHeight
+import com.android.systemui.driftvane.glance.DriftGlanceStackMaxHeight
 import com.android.systemui.keyguard.domain.interactor.KeyguardBlueprintInteractor
 import com.android.systemui.keyguard.shared.model.KeyguardSection
 import com.android.systemui.res.R
@@ -28,8 +28,8 @@ import kotlinx.coroutines.launch
 
 /**
  * DriftVaneOS: the glance stack. Swipeable cards (music, battery, next alarm) that sit right
- * above the fingerprint icon (which is drawn over the under-display sensor), with the
- * notification list ending above the stack so they never overlap.
+ * below the fingerprint icon (which is drawn over the under-display sensor) and above the
+ * bottom shortcut buttons.
  */
 class DriftGlanceStackSection
 @Inject
@@ -69,22 +69,17 @@ constructor(
         val on = repo.enabled.value
         val side = dp(16f)
         constraintSet.apply {
+            // Below the fingerprint icon (drawn over the sensor) and above the bottom shortcut
+            // buttons, so it never covers either. Card height follows the space there.
             constrainWidth(viewId, ConstraintSet.MATCH_CONSTRAINT)
-            constrainHeight(viewId, if (on) dp(DriftGlanceStackHeight.value) else 0)
+            constrainHeight(viewId, ConstraintSet.MATCH_CONSTRAINT)
+            constrainMaxHeight(viewId, dp(DriftGlanceStackMaxHeight.value))
             connect(viewId, ConstraintSet.START, ConstraintSet.PARENT_ID, ConstraintSet.START, side)
             connect(viewId, ConstraintSet.END, ConstraintSet.PARENT_ID, ConstraintSet.END, side)
-            connect(viewId, ConstraintSet.BOTTOM, R.id.device_entry_icon_view, ConstraintSet.TOP, dp(10f))
-            if (on) {
-                // Notifications stop above the stack instead of above the fingerprint icon.
-                createBarrier(
-                    R.id.nssl_placeholder_barrier_bottom,
-                    Barrier.TOP,
-                    0,
-                    R.id.device_entry_icon_view,
-                    R.id.ambient_indication_container,
-                    viewId,
-                )
-            }
+            connect(viewId, ConstraintSet.TOP, R.id.device_entry_icon_view, ConstraintSet.BOTTOM, dp(6f))
+            connect(viewId, ConstraintSet.BOTTOM, R.id.start_button, ConstraintSet.TOP, dp(6f))
+            setVerticalBias(viewId, 0f)
+            setVisibility(viewId, if (on) View.VISIBLE else View.GONE)
         }
     }
 

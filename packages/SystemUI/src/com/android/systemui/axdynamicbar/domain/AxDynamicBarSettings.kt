@@ -40,7 +40,7 @@ class AxDynamicBarSettings @Inject constructor(
     private val _isEnabled = MutableStateFlow(false)
     @get:JvmName("getIsEnabled") val isEnabled: StateFlow<Boolean> = _isEnabled.asStateFlow()
 
-    private val _isKeyguardEnabled = MutableStateFlow(true)
+    private val _isKeyguardEnabled = MutableStateFlow(false)
     val isKeyguardEnabled: StateFlow<Boolean> = _isKeyguardEnabled.asStateFlow()
 
     private val _keyguardBatteryChipMode = MutableStateFlow(1)
@@ -119,7 +119,7 @@ class AxDynamicBarSettings @Inject constructor(
         _isEnabled.value =
             secureSettings.getIntForUser(KEY_ENABLED, 1, UserHandle.USER_CURRENT) == 1 // DriftVaneOS: on by default
         _isKeyguardEnabled.value =
-            secureSettings.getIntForUser(KEY_KEYGUARD_ENABLED, 1, UserHandle.USER_CURRENT) == 1
+            secureSettings.getIntForUser(KEY_KEYGUARD_ENABLED, 0, UserHandle.USER_CURRENT) == 1 // DriftVaneOS: off by default
         _keyguardBatteryChipMode.value =
             secureSettings.getIntForUser(KEY_KEYGUARD_BATTERY_CHIP_MODE, 1, UserHandle.USER_CURRENT)
         _compactNotifications.value =

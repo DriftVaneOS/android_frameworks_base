@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
@@ -59,11 +60,10 @@ import kotlinx.coroutines.delay
 
 private enum class GlanceCard { MEDIA, BATTERY, ALARM }
 
-private val CardShape = RoundedCornerShape(24.dp)
-private val CardHeight = 106.dp
+private val CardShape = RoundedCornerShape(22.dp)
 
-/** Total height the lock screen section reserves for the stack (cards + layers + dots). */
-val DriftGlanceStackHeight = 136.dp
+/** Most height the lock screen gives the stack (it sits between fingerprint and shortcuts). */
+val DriftGlanceStackMaxHeight = 96.dp
 
 @Composable
 fun DriftGlanceStack(repo: DriftGlanceRepository, modifier: Modifier = Modifier) {
@@ -82,27 +82,27 @@ fun DriftGlanceStack(repo: DriftGlanceRepository, modifier: Modifier = Modifier)
     }
     val pager = rememberPagerState(0) { cards.size }
     val cs = MaterialTheme.colorScheme
+    val layers = cards.size > 1
 
     Column(
         modifier.fillMaxSize().graphicsLayer { this.alpha = alpha },
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-        Box(Modifier.fillMaxWidth().height(CardHeight + 12.dp)) {
-            if (cards.size > 1) {
+        Box(Modifier.fillMaxWidth().weight(1f)) {
+            if (layers) {
+                // the cards behind, peeking out under the front one
                 Box(
-                    Modifier.padding(start = 18.dp, end = 18.dp, top = 12.dp)
-                        .fillMaxWidth().height(CardHeight).clip(CardShape)
-                        .background(cs.surfaceContainerLow)
+                    Modifier.fillMaxSize().padding(start = 16.dp, end = 16.dp, top = 8.dp)
+                        .clip(CardShape).background(cs.surfaceContainerLow)
                 )
                 Box(
-                    Modifier.padding(start = 9.dp, end = 9.dp, top = 6.dp)
-                        .fillMaxWidth().height(CardHeight).clip(CardShape)
-                        .background(cs.surfaceContainer)
+                    Modifier.fillMaxSize().padding(start = 8.dp, end = 8.dp, top = 4.dp, bottom = 4.dp)
+                        .clip(CardShape).background(cs.surfaceContainer)
                 )
             }
             HorizontalPager(
                 state = pager,
-                modifier = Modifier.fillMaxWidth().height(CardHeight),
+                modifier = Modifier.fillMaxSize().padding(bottom = if (layers) 8.dp else 0.dp),
                 pageSpacing = 12.dp,
                 userScrollEnabled = show,
             ) { page ->
@@ -116,8 +116,8 @@ fun DriftGlanceStack(repo: DriftGlanceRepository, modifier: Modifier = Modifier)
                 }
             }
         }
-        if (cards.size > 1) {
-            Spacer(Modifier.height(8.dp))
+        if (layers) {
+            Spacer(Modifier.height(5.dp))
             Row(horizontalArrangement = Arrangement.spacedBy(5.dp)) {
                 repeat(cards.size) { i ->
                     val selected = i == pager.currentPage
@@ -133,22 +133,22 @@ fun DriftGlanceStack(repo: DriftGlanceRepository, modifier: Modifier = Modifier)
 }
 
 @Composable
-private fun CardBox(
+private fun CardRow(
     background: Color,
     onClick: (() -> Unit)?,
-    content: @Composable () -> Unit,
+    content: @Composable RowScope.() -> Unit,
 ) {
     var m = Modifier.fillMaxSize().clip(CardShape).background(background)
     if (onClick != null) m = m.clickable(onClick = onClick)
-    Box(m.padding(horizontal = 18.dp, vertical = 14.dp)) { content() }
+    Row(m.padding(horizontal = 16.dp, vertical = 6.dp), verticalAlignment = Alignment.CenterVertically) {
+        content()
+    }
 }
 
 @Composable
-private fun Label(icon: ImageVector, text: String, color: Color) {
-    Row(verticalAlignment = Alignment.CenterVertically) {
-        Icon(icon, null, tint = color, modifier = Modifier.size(14.dp))
-        Spacer(Modifier.width(6.dp))
-        Text(text, color = color, fontSize = 12.sp, fontWeight = FontWeight.Medium, maxLines = 1)
+private fun Badge(icon: ImageVector, bg: Color, tint: Color) {
+    Box(Modifier.size(38.dp).clip(CircleShape).background(bg), contentAlignment = Alignment.Center) {
+        Icon(icon, null, tint = tint, modifier = Modifier.size(20.dp))
     }
 }
 
@@ -161,69 +161,62 @@ private fun MediaCard(
     enabled: Boolean,
 ) {
     val cs = MaterialTheme.colorScheme
-    CardBox(cs.primary, if (enabled) ({ repo.openMusic() }) else null) {
-        Row(Modifier.fillMaxSize(), verticalAlignment = Alignment.CenterVertically) {
-            Column(Modifier.weight(1f).fillMaxHeight(), verticalArrangement = Arrangement.SpaceBetween) {
-                Label(Icons.Filled.MusicNote, "Now playing", cs.onPrimary.copy(alpha = 0.8f))
-                Column {
-                    Text(track, color = cs.onPrimary, fontSize = 17.sp, fontWeight = FontWeight.SemiBold,
-                        maxLines = 1, overflow = TextOverflow.Ellipsis)
-                    if (artist.isNotBlank()) {
-                        Text(artist, color = cs.onPrimary.copy(alpha = 0.8f), fontSize = 13.sp,
-                            maxLines = 1, overflow = TextOverflow.Ellipsis)
-                    }
-                }
+    CardRow(cs.primary, if (enabled) ({ repo.openMusic() }) else null) {
+        Badge(Icons.Filled.MusicNote, cs.onPrimary.copy(alpha = 0.18f), cs.onPrimary)
+        Spacer(Modifier.width(12.dp))
+        Column(Modifier.weight(1f)) {
+            Text(track, color = cs.onPrimary, fontSize = 15.sp, fontWeight = FontWeight.SemiBold,
+                maxLines = 1, overflow = TextOverflow.Ellipsis)
+            if (artist.isNotBlank()) {
+                Text(artist, color = cs.onPrimary.copy(alpha = 0.8f), fontSize = 12.sp,
+                    maxLines = 1, overflow = TextOverflow.Ellipsis)
             }
-            Spacer(Modifier.width(8.dp))
-            MediaButton(Icons.Filled.SkipPrevious, cs.onPrimary, enabled) { repo.skipPrev() }
-            MediaButton(if (playing) Icons.Filled.Pause else Icons.Filled.PlayArrow, cs.onPrimary, enabled) {
-                repo.togglePlayPause()
-            }
-            MediaButton(Icons.Filled.SkipNext, cs.onPrimary, enabled) { repo.skipNext() }
         }
+        MediaButton(Icons.Filled.SkipPrevious, cs.onPrimary, enabled) { repo.skipPrev() }
+        MediaButton(if (playing) Icons.Filled.Pause else Icons.Filled.PlayArrow, cs.onPrimary, enabled) {
+            repo.togglePlayPause()
+        }
+        MediaButton(Icons.Filled.SkipNext, cs.onPrimary, enabled) { repo.skipNext() }
     }
 }
 
 @Composable
 private fun MediaButton(icon: ImageVector, tint: Color, enabled: Boolean, onClick: () -> Unit) {
     Box(
-        Modifier.size(40.dp).clip(CircleShape).clickable(enabled = enabled, onClick = onClick),
+        Modifier.size(38.dp).clip(CircleShape).clickable(enabled = enabled, onClick = onClick),
         contentAlignment = Alignment.Center,
     ) {
-        Icon(icon, null, tint = tint, modifier = Modifier.size(24.dp))
+        Icon(icon, null, tint = tint, modifier = Modifier.size(22.dp))
     }
 }
 
 @Composable
 private fun BatteryCard(b: DriftGlanceRepository.Battery) {
     val cs = MaterialTheme.colorScheme
-    CardBox(cs.surfaceContainerHigh, null) {
-        Column(Modifier.fillMaxSize(), verticalArrangement = Arrangement.SpaceBetween) {
-            Label(
-                if (b.plugged) Icons.Filled.BatteryChargingFull else Icons.Filled.BatteryFull,
-                "Battery",
-                cs.onSurfaceVariant,
+    val low = b.level <= 15 && !b.plugged
+    CardRow(cs.surfaceContainerHigh, null) {
+        Badge(
+            if (b.plugged) Icons.Filled.BatteryChargingFull else Icons.Filled.BatteryFull,
+            cs.primary.copy(alpha = 0.18f),
+            if (low) cs.error else cs.primary,
+        )
+        Spacer(Modifier.width(12.dp))
+        Column(Modifier.weight(1f)) {
+            Text("${b.level}%", color = cs.onSurface, fontSize = 20.sp, fontWeight = FontWeight.SemiBold, maxLines = 1)
+            Text(
+                when {
+                    b.full -> "Charged"
+                    b.plugged -> "Charging"
+                    else -> "Battery"
+                },
+                color = cs.onSurfaceVariant, fontSize = 12.sp, maxLines = 1,
             )
-            Row(verticalAlignment = Alignment.Bottom) {
-                Text("${b.level}%", color = cs.onSurface, fontSize = 28.sp, fontWeight = FontWeight.SemiBold)
-                Spacer(Modifier.width(10.dp))
-                Text(
-                    when {
-                        b.full -> "Charged"
-                        b.plugged -> "Charging"
-                        else -> "Not charging"
-                    },
-                    color = cs.onSurfaceVariant,
-                    fontSize = 13.sp,
-                    modifier = Modifier.padding(bottom = 5.dp),
-                )
-            }
-            Box(Modifier.fillMaxWidth().height(6.dp).clip(CircleShape).background(cs.surfaceContainerHighest)) {
-                Box(
-                    Modifier.fillMaxWidth(b.level / 100f).fillMaxHeight().clip(CircleShape)
-                        .background(if (b.level <= 15 && !b.plugged) cs.error else cs.primary)
-                )
-            }
+        }
+        Box(Modifier.width(88.dp).height(6.dp).clip(CircleShape).background(cs.surfaceContainerHighest)) {
+            Box(
+                Modifier.fillMaxWidth(b.level / 100f).fillMaxHeight().clip(CircleShape)
+                    .background(if (low) cs.error else cs.primary)
+            )
         }
     }
 }
@@ -246,12 +239,14 @@ private fun AlarmCard(time: Long, repo: DriftGlanceRepository, enabled: Boolean)
         mins < 60 -> "in ${mins}m"
         else -> "in ${mins / 60}h ${mins % 60}m"
     }
-    CardBox(cs.surfaceContainerHigh, if (enabled) ({ repo.openAlarms() }) else null) {
-        Column(Modifier.fillMaxSize(), verticalArrangement = Arrangement.SpaceBetween) {
-            Label(Icons.Filled.Alarm, "Next alarm", cs.onSurfaceVariant)
-            Text(DateFormat.format(pattern, time).toString(), color = cs.onSurface, fontSize = 26.sp,
+    CardRow(cs.surfaceContainerHigh, if (enabled) ({ repo.openAlarms() }) else null) {
+        Badge(Icons.Filled.Alarm, cs.primary.copy(alpha = 0.18f), cs.primary)
+        Spacer(Modifier.width(12.dp))
+        Column(Modifier.weight(1f)) {
+            Text(DateFormat.format(pattern, time).toString(), color = cs.onSurface, fontSize = 20.sp,
                 fontWeight = FontWeight.SemiBold, maxLines = 1)
-            Text(until, color = cs.primary, fontSize = 13.sp, fontWeight = FontWeight.Medium)
+            Text("Next alarm", color = cs.onSurfaceVariant, fontSize = 12.sp, maxLines = 1)
         }
+        Text(until, color = cs.primary, fontSize = 14.sp, fontWeight = FontWeight.Medium)
     }
 }
