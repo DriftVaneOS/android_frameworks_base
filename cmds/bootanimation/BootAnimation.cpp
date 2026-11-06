@@ -60,6 +60,7 @@
 #include <EGL/eglext.h>
 
 #include "BootAnimation.h"
+#include "DriftVaneHaptics.h"
 #include "BootAnimationShaders.h"
 
 #include <com_android_graphics_bootanimation_flags.h>
@@ -1571,6 +1572,11 @@ bool BootAnimation::playAnimation(const Animation& animation) {
 
                 const Animation::Frame& frame(part.frames[frameIdxInPart]);
                 nsecs_t lastFrame = systemTime();
+
+                // DriftVaneOS: boot animation haptics (not on the shutdown animation)
+                if (!mShuttingDown) {
+                    driftVaneBootHaptics(partIdx, frameIdx, frameIdxInPart);
+                }
 
                 if (frameIdx > 0) {
                     glBindTexture(GL_TEXTURE_2D, frame.tid);

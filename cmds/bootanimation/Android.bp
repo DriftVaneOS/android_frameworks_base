@@ -81,13 +81,22 @@ cc_library_shared {
     name: "libbootanimation_preapex",
     defaults: ["bootanimation_defaults"],
 
-    srcs: ["BootAnimation.cpp"],
+    srcs: [
+        "BootAnimation.cpp",
+        "DriftVaneHaptics.cpp",
+    ],
 
     shared_libs: [
+        "libbinder_ndk",
         "libui",
         "libjnigraphics_preapex",
         "libEGL",
         "libGLESv2",
         "libgui",
+    ],
+
+    // DriftVaneOS: boot animation haptics
+    static_libs: [
+        "android.hardware.vibrator-V2-ndk",
     ],
 }
