@@ -6,7 +6,7 @@
 // DriftVaneOS: haptics for the boot animation.
 //   part0 frame 24: DRIFT crashes down        -> strong hit
 //   part0 frame 86: VANE smashes into it      -> strong hit
-//   part1 first frame (loading loop starts)   -> one subtle tick, once
+//   (the one subtle tick while loading comes from SystemUI when it starts)
 // Talks to the vibrator HAL directly (the framework isn't up yet). If anything is missing,
 // it does nothing.
 
@@ -34,19 +34,18 @@ constexpr size_t kDriftFrame = 24;
 constexpr size_t kVaneFrame = 86;
 
 std::shared_ptr<IVibrator> vibrator() {
+    // Keep looking until the vibrator HAL is up (it may start after the boot animation does).
     static std::mutex lock;
     static std::shared_ptr<IVibrator> vib;
-    static bool tried = false;
     std::lock_guard<std::mutex> guard(lock);
-    if (!tried) {
-        tried = true;
+    if (vib == nullptr) {
         const std::string name = std::string(IVibrator::descriptor) + "/default";
         ndk::SpAIBinder binder(AServiceManager_checkService(name.c_str()));
         if (binder.get() != nullptr) {
             vib = IVibrator::fromBinder(binder);
         }
         if (vib == nullptr) {
-            ALOGW("no vibrator HAL, boot animation haptics off");
+            ALOGW("vibrator HAL not up yet");
         }
     }
     return vib;
@@ -77,12 +76,11 @@ void buzz(bool strong) {
 } // namespace
 
 void driftVaneBootHaptics(size_t partIdx, int repeatIdx, size_t frameIdxInPart) {
-    static bool loadingDone = false;
-    if (partIdx == 0 && repeatIdx == 0) {
-        if (frameIdxInPart == kDriftFrame || frameIdxInPart == kVaneFrame) buzz(true);
-    } else if (partIdx == 1 && repeatIdx == 0 && frameIdxInPart == 0 && !loadingDone) {
-        loadingDone = true;
-        buzz(false);
+    // The subtle "loading" tick comes from SystemUI (Android's vibrator service), so the boot
+    // vibrates for sure even if the HAL isn't reachable from here.
+    if (partIdx == 0 && repeatIdx == 0 &&
+            (frameIdxInPart == kDriftFrame || frameIdxInPart == kVaneFrame)) {
+        buzz(true);
     }
 }
 
