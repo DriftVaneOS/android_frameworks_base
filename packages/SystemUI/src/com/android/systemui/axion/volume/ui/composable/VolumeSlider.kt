@@ -333,7 +333,20 @@ private fun VolumeSlider(
         )
         if (aurora) {
             Spacer(modifier = Modifier.height(AuroraTrackToIconGap))
-            VolumeSliderIcon(isVisible = true, onIconClick = onIconClick, icon = icon)
+            // Plain fixed-size box: SliderIcon fills all the space it gets, which in a
+            // Column stretched the pill down the whole screen.
+            Box(
+                modifier = Modifier
+                    .size(SliderIconContainerSize)
+                    .clickable(
+                        interactionSource = remember { MutableInteractionSource() },
+                        indication = null,
+                        onClick = onIconClick,
+                    ),
+                contentAlignment = Alignment.Center,
+            ) {
+                icon()
+            }
         }
     }
 }
