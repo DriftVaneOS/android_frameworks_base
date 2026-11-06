@@ -65,9 +65,11 @@ fun SliderTrack(
     activeTrackEndIcon: (@Composable BoxScope.(iconsState: SliderIconsState) -> Unit)? = null,
     inactiveTrackStartIcon: (@Composable BoxScope.(iconsState: SliderIconsState) -> Unit)? = null,
     inactiveTrackEndIcon: (@Composable BoxScope.(iconsState: SliderIconsState) -> Unit)? = null,
+    useDriftVolumeStyle: Boolean = true,
 ) {
     val isRtl = LocalLayoutDirection.current == LayoutDirection.Rtl
-    val volumeStyle = rememberVolumeStyle()
+    val driftVolumeStyle = rememberVolumeStyle()
+    val volumeStyle = if (useDriftVolumeStyle) driftVolumeStyle else VOLUME_STYLE_STOCK
     val measurePolicy =
         remember(sliderState, isRtl, isVertical, thumbTrackGapSize) {
             TrackMeasurePolicy(

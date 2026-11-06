@@ -17,8 +17,12 @@
 package com.android.systemui.volume.dagger;
 
 import android.content.BroadcastReceiver;
+import android.content.Context;
+import android.provider.Settings;
 
 import com.android.systemui.CoreStartable;
+import com.android.systemui.axion.volume.AxionVolumeDialogPlugin;
+import com.android.systemui.axion.volume.dagger.AxionVolumeSubcomponentModule;
 import com.android.systemui.plugins.VolumeDialog;
 import com.android.systemui.statusbar.policy.ConfigurationController;
 import com.android.systemui.volume.VolumeComponent;
@@ -32,7 +36,9 @@ import com.android.systemui.volume.panel.dagger.VolumePanelComponent;
 import com.android.systemui.volume.panel.dagger.factory.VolumePanelComponentFactory;
 
 import dagger.Binds;
+import dagger.Lazy;
 import dagger.Module;
+import dagger.Provides;
 import dagger.multibindings.ClassKey;
 import dagger.multibindings.IntoMap;
 import dagger.multibindings.IntoSet;
@@ -46,6 +52,7 @@ import dagger.multibindings.IntoSet;
                 CaptioningModule.class,
                 MediaDevicesModule.class,
                 SpatializerModule.class,
+                AxionVolumeSubcomponentModule.class,
         },
         subcomponents = {
                 VolumePanelComponent.class,
@@ -85,6 +92,16 @@ public interface VolumeModule {
     VolumeDialogPluginComponentFactory bindVolumeDialogPluginComponentFactory(
             VolumeDialogPluginComponent.Factory impl);
 
-    @Binds
-    VolumeDialog bindVolumeDialog(VolumeDialogPlugin impl);
+    /** DriftVaneOS: the AxionOS volume panel by default, the stock dialog when turned off. */
+    String DRIFTVANE_AXION_VOLUME = "driftvane_axion_volume";
+
+    @Provides
+    static VolumeDialog provideVolumeDialog(
+            Context context,
+            Lazy<AxionVolumeDialogPlugin> axionVolumeDialogPlugin,
+            Lazy<VolumeDialogPlugin> volumeDialogPlugin) {
+        final boolean useAxion = Settings.Secure.getInt(
+                context.getContentResolver(), DRIFTVANE_AXION_VOLUME, 1) != 0;
+        return useAxion ? axionVolumeDialogPlugin.get() : volumeDialogPlugin.get();
+    }
 }
