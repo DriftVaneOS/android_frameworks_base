@@ -19,6 +19,8 @@ constructor(
     override fun start() {
         // DriftVaneOS: one subtle tick while the boot animation is loading
         DriftBootTick.onSystemUiStart(context)
+        // DriftVaneOS: "Restart SystemUI" button in DriftVane Enhancements
+        com.android.systemui.driftvane.DriftSystemUiRestart.register(context)
         viewModel.interactor.init()
         expandedPanel.init()
     }
