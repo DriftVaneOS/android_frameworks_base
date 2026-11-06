@@ -23,6 +23,7 @@ import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -296,30 +297,49 @@ private fun ContentScope.CollapsedPanelContent(
                 .requiredWidth(CollapsedPanelWidth)
                 .pointerInput(Unit) { detectTapGestures {} }
         ) {
-            VolumePanelCard(
-                modifier = Modifier.requiredWidth(CollapsedPanelWidth),
-                blurAlpha = visibilityProgress,
+            // DriftVaneOS: AuroraOSP layout: ringer in its own bubble, then a black pill with
+            // the dotted track, the stream icon under it and the expand arrow at the bottom.
+            AuroraRingerButton(
+                ringerMode = ringerMode,
+                onClick = {
+                    viewModel.rescheduleTimeout()
+                    viewModel.cycleRingerMode()
+                },
+                modifier = Modifier.element(VolumeElements.RingerControl),
+                alpha = visibilityProgress,
+            )
+
+            Spacer(modifier = Modifier.height(AuroraRingerGap))
+
+            Box(
+                modifier = Modifier
+                    .requiredWidth(CollapsedPanelWidth)
+                    .element(VolumeElements.PanelCard)
+                    .clip(CardShape),
+                contentAlignment = Alignment.TopCenter,
             ) {
+                Box(
+                    modifier = Modifier
+                        .matchParentSize()
+                        .element(VolumeElements.PanelBackground)
+                        .graphicsLayer { alpha = visibilityProgress }
+                        .background(AuroraPillColor, CardShape)
+                )
+                androidx.compose.runtime.CompositionLocalProvider(
+                    androidx.compose.material3.LocalContentColor provides
+                        androidx.compose.ui.graphics.Color.White
+                ) {
                 Column(
                     horizontalAlignment = Alignment.CenterHorizontally,
-                    modifier = Modifier.padding(bottom = ContentSpacingSmall)
+                    modifier = Modifier.padding(top = ContentSpacingSmall * 2, bottom = ContentSpacingSmall)
                 ) {
-                    RingerCircleButton(
-                        ringerMode = ringerMode,
-                        onClick = {
-                            viewModel.rescheduleTimeout()
-                            viewModel.cycleRingerMode()
-                        },
-                        modifier = Modifier.element(VolumeElements.RingerControl),
-                        blurAlpha = visibilityProgress,
-                    )
-
                     if (streamModel != null) {
                         SliderColumn(
                             stream = streamModel,
                             viewModel = viewModel,
                             touchWidth = CollapsedPanelWidth,
-                            showPercentage = true,
+                            showPercentage = false,
+                            aurora = true,
                             modifier = Modifier.element(
                                 volumeStreamSliderElementKey(streamModel.streamType)
                             )
@@ -354,9 +374,10 @@ private fun ContentScope.CollapsedPanelContent(
                             modifier = Modifier
                                 .size(HeaderIconSize)
                                 .graphicsLayer { scaleX = if (isLeft) 1f else -1f },
-                            tint = volumePanelSecondaryContentColor()
+                            tint = androidx.compose.ui.graphics.Color.White.copy(alpha = 0.6f)
                         )
                     }
+                }
                 }
             }
         }

@@ -49,6 +49,15 @@ internal val ContentSpacingSmall = 8.dp
 
 internal const val MaxVisibleSliders = 5
 
+// DriftVaneOS: AuroraOSP-style collapsed panel
+internal val AuroraTrackWidth = 12.dp
+internal val AuroraDotRadius = 1.5.dp
+internal val AuroraDotSpacing = 9.dp
+internal val AuroraTrackToIconGap = 6.dp
+internal val AuroraRingerSize = 48.dp
+internal val AuroraRingerGap = 10.dp
+internal val AuroraPillColor = androidx.compose.ui.graphics.Color(0xF2101010)
+
 internal val SeeMoreHeight = SliderIconContainerSize
 internal val HeaderIconSize = 20.dp
 

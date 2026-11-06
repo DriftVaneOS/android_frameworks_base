@@ -20,7 +20,12 @@ package com.android.systemui.axion.volume.ui.composable
 import android.view.HapticFeedbackConstants
 import android.view.View
 import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.ui.geometry.CornerRadius
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.Orientation
 import androidx.compose.foundation.gestures.awaitEachGesture
@@ -92,6 +97,7 @@ fun SliderColumn(
     iconSize: Dp = SliderIconSize,
     showPercentage: Boolean = true,
     modifier: Modifier = Modifier,
+    aurora: Boolean = false,
 ) {
     val muted = stream.isMuted
     val valueRange = stream.minLevel.toFloat()..stream.maxLevel.toFloat()
@@ -122,7 +128,8 @@ fun SliderColumn(
             )
         },
         onIconClick = { viewModel.toggleMute(stream.streamType) },
-        showPercentage = showPercentage,
+        showPercentage = showPercentage && !aurora,
+        aurora = aurora,
         onInteractionStart = {
             viewModel.isInteracting = true
             viewModel.setActiveStream(stream.streamType)
@@ -213,6 +220,7 @@ private fun VolumeSlider(
     icon: @Composable () -> Unit,
     onIconClick: () -> Unit,
     showPercentage: Boolean = false,
+    aurora: Boolean = false,
     onInteractionStart: () -> Unit = {},
     onInteractionEnd: () -> Unit = {},
 ) {
@@ -279,7 +287,11 @@ private fun VolumeSlider(
                 orientation = Orientation.Vertical,
             ),
             track = { sliderState ->
-                SliderTrack(
+                if (aurora) {
+                    val range = sliderState.valueRange
+                    val span = (range.endInclusive - range.start).takeIf { it > 0f } ?: 1f
+                    AuroraTrack(((sliderState.value - range.start) / span).coerceIn(0f, 1f))
+                } else SliderTrack(
                     sliderState = sliderState,
                     colors = colors,
                     isEnabled = true,
@@ -303,7 +315,7 @@ private fun VolumeSlider(
                 )
             },
             thumb = { sliderState, interactions ->
-                SliderDefaults.Thumb(
+                if (!aurora) SliderDefaults.Thumb(
                     sliderState = sliderState,
                     interactionSource = interactions,
                     enabled = true,
@@ -319,6 +331,40 @@ private fun VolumeSlider(
                     view = view,
                 ),
         )
+        if (aurora) {
+            Spacer(modifier = Modifier.height(AuroraTrackToIconGap))
+            VolumeSliderIcon(isVisible = true, onIconClick = onIconClick, icon = icon)
+        }
+    }
+}
+
+/** DriftVaneOS: AuroraOSP-style track: a thin accent pill that fills from the bottom,
+ *  with a column of dots marking the empty part. Nothing else, no thumb. */
+@Composable
+private fun AuroraTrack(fraction: Float) {
+    val fill = MaterialTheme.colorScheme.primary
+    val dot = androidx.compose.ui.graphics.Color.White.copy(alpha = 0.32f)
+    Canvas(modifier = Modifier.fillMaxSize()) {
+        val w = AuroraTrackWidth.toPx()
+        val x = (size.width - w) / 2f
+        val h = size.height
+        val active = if (fraction <= 0f) 0f else (h * fraction).coerceAtLeast(w)
+        if (active > 0f) {
+            drawRoundRect(
+                color = fill,
+                topLeft = Offset(x, h - active),
+                size = Size(w, active),
+                cornerRadius = CornerRadius(w / 2f, w / 2f),
+            )
+        }
+        val r = AuroraDotRadius.toPx()
+        val step = AuroraDotSpacing.toPx()
+        val limit = h - active - step
+        var y = r
+        while (y <= limit) {
+            drawCircle(color = dot, radius = r, center = Offset(size.width / 2f, y))
+            y += step
+        }
     }
 }
 

@@ -42,6 +42,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.Dp
@@ -84,6 +85,39 @@ fun RingerCircleButton(
                     tint = MaterialTheme.colorScheme.onPrimary
                 )
             }
+        }
+    }
+}
+
+/** DriftVaneOS: AuroraOSP-style ringer bubble: solid black circle, plain white icon. */
+@Composable
+fun AuroraRingerButton(
+    ringerMode: AxionRingerMode,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    alpha: Float = 1f,
+) {
+    val bubbleAlpha = alpha
+    Box(
+        modifier = modifier
+            .size(AuroraRingerSize)
+            .graphicsLayer { this.alpha = bubbleAlpha }
+            .clip(CircleShape)
+            .background(AuroraPillColor)
+            .clickable(
+                interactionSource = remember { MutableInteractionSource() },
+                indication = null,
+                onClick = onClick
+            ),
+        contentAlignment = Alignment.Center,
+    ) {
+        Crossfade(targetState = ringerMode, label = "auroraRingerIcon") { mode ->
+            Icon(
+                painter = painterResource(mode.iconRes),
+                contentDescription = mode.label,
+                modifier = Modifier.size(SliderIconSize + 2.dp),
+                tint = androidx.compose.ui.graphics.Color.White,
+            )
         }
     }
 }
